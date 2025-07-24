@@ -1,0 +1,25 @@
+services:
+  jupyterhub:
+    build: .
+    container_name: jupyterhub
+    restart: always
+    ports:
+      - "${JUPYTERHUB_PORT}:8000"
+    volumes:
+      - ./jupyterhub_config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py
+      - jupyterhub-data:/srv/jupyterhub/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - jupyterhub-network
+    environment:
+      - DOCKER_JUPYTER_IMAGE=${DOCKER_JUPYTER_IMAGE}
+      - JUPYTERHUB_ADMIN_USERS=${JUPYTERHUB_ADMIN_USERS}
+      - JUPYTERHUB_NETWORK=${JUPYTERHUB_NETWORK}
+    command: jupyterhub -f /srv/jupyterhub/jupyterhub_config.py
+
+volumes:
+  jupyterhub-data:
+
+networks:
+  jupyterhub-network:
+    external: true
