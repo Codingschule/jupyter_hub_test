@@ -1,3 +1,4 @@
+
 services:
   jupyterhub:
     build: .
@@ -5,21 +6,43 @@ services:
     restart: always
     ports:
       - "${JUPYTERHUB_PORT}:8000"
-    volumes:
-      - ./jupyterhub_config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py
-      - jupyterhub-data:/srv/jupyterhub/data
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - jupyterhub-network
+    env_file:
+      - .env
     environment:
       - DOCKER_JUPYTER_IMAGE=${DOCKER_JUPYTER_IMAGE}
       - JUPYTERHUB_ADMIN_USERS=${JUPYTERHUB_ADMIN_USERS}
       - JUPYTERHUB_NETWORK=${JUPYTERHUB_NETWORK}
-    command: jupyterhub -f /srv/jupyterhub/jupyterhub_config.py
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_HOST=jupyterhub-mysql
+      - MYSQL_PORT=3306
+    volumes:
+      - ./jupyterhub_config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - ${JUPYTERHUB_NETWORK}
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    container_name: jupyterhub-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: jupyterhub
+      MYSQL_USER: jupyteruser
+      MYSQL_PASSWORD: userpassword
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - ${JUPYTERHUB_NETWORK}
 
 volumes:
-  jupyterhub-data:
+  mysql-data:
 
 networks:
   jupyterhub-network:
     external: true
+

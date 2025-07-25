@@ -1,3 +1,4 @@
 FROM jupyterhub/jupyterhub:latest
 
-RUN pip install dockerspawner
+RUN pip install  jupyterhub jupyterlab jupyterhub-nativeauthenticator pymysql dockerspawner
+
