@@ -1,0 +1,16 @@
+FROM jupyter/datascience-notebook:latest
+
+# Install jupyterhub (need to start-singleuser.sh) y packets util
+# conda/manba 
+USER root
+RUN mamba install -y -n base -c conda-forge \
+      jupyterhub=5.1.0 \
+      dask dask-gateway \
+      pyarrow fastparquet s3fs \
+  && mamba clean -afy \
+  && fix-permissions "${CONDA_DIR}" \
+  && fix-permissions "/home/${NB_USER}" \
+  && rm -rf /tmp/*
+
+# Volver a usuario normal
+USER ${NB_USER}

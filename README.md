@@ -2,7 +2,8 @@
 
 Testing Jupyter-Hub!
 
-Note: ! Run first network
+Note: !Run first network
+????? create dir : mkdir -p ~/jupyterhub_project/jupyterhub_config
 
 
 # bash:
