@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, time, json, urllib.request, urllib.error, hashlib, sys
+import os, time, json, urllib.request, urllib.error, urllib.parse, hashlib, sys
 
 API_URL = os.environ["JUPYTERHUB_API_URL"].rstrip("/")   # CDI for JupyterHub
 API_TOKEN = os.environ["JUPYTERHUB_API_TOKEN"]           # CDI for JupyterHub
@@ -26,13 +26,10 @@ def load_desired():
     with open(USERS_FILE, "r", encoding="utf-8") as f:
         raw = json.load(f)
 
-    desired_users = {}   # name -> {"admin":bool, "groups":set()}
-    desired_groups = {}  # group -> set(usernames)
+    desired_users = {}  
+    desired_groups = {} 
 
-    # Format accepted:
-    #  A) {"users":[{"name":"u","admin":false,"groups":["g1","g2"]}, ...]}
-    #  B) {"admins":[...], "allowed":[...], "groups":{"g":[...], ...}}
-    #  C) ["u1","u2", ...]
+
     if isinstance(raw, list):
         for u in raw:
             desired_users[str(u)] = {"admin": False, "groups": set()}
@@ -45,7 +42,7 @@ def load_desired():
                 admin = bool(u.get("admin", False))
                 groups = set(u.get("groups", []))
                 desired_users[name] = {"admin": admin, "groups": groups}
-        # extras estilo B
+
         for name in raw.get("admins", []) or []:
             name = str(name)
             desired_users.setdefault(name, {"admin": False, "groups": set()})
@@ -78,22 +75,16 @@ def get_current():
 
 
 def ensure_user(name: str, admin: bool):
-    """
-    Crea el usuario si no existe y ajusta el flag 'admin' si es necesario.
-    - NO envía 'approved' (no es parte del core API de JupyterHub).
-    - Idempotente: evita PATCH si no hay cambios.
-    """
-    # Asegúrate de haber normalizado 'name' antes si lo necesitas
+
     uname = name.strip()
     path = f"/users/{urllib.parse.quote(uname, safe='')}"
 
-    # 1) Crear si falta (puedes incluir admin en el POST para ahorrar un PATCH)
+
     post_body = {"admin": True} if admin else None
     code, _ = api("POST", path, post_body)
     if code not in (201, 409):  # 201 creado, 409 ya existe
         raise RuntimeError(f"POST {path} -> {code}")
 
-    # 2) Leer estado actual para decidir si hay que parchear
     code, data = api("GET", path, None)
     if code == 200 and isinstance(data, dict):
         cur_admin = bool(data.get("admin", False))
@@ -102,7 +93,6 @@ def ensure_user(name: str, admin: bool):
             if code2 not in (200, 204):
                 raise RuntimeError(f"PATCH {path} -> {code2}")
     else:
-        # Fallback (si por algún motivo falla el GET, intenta el PATCH directo)
         code2, _ = api("PATCH", path, {"admin": bool(admin)})
         if code2 not in (200, 204, 404):
             raise RuntimeError(f"PATCH {path} -> {code2}")
@@ -122,11 +112,10 @@ def add_members(group, users):
         raise RuntimeError(f"POST /groups/{group}/users -> {code}")
 
 def remove_members(group, users):
-    # API accept DELETE for one user
     for u in users:
         code, _ = api("DELETE", f"/groups/{urllib.parse.quote(group)}/users/{urllib.parse.quote(u)}")
         if code not in (200, 204):
-            pass  # tolerant
+            pass  
 
 def reconcile():
     desired_users, desired_groups = load_desired()
@@ -161,7 +150,6 @@ def watch():
         except FileNotFoundError:
             pass
         except Exception as e:
-            # log básico a stdout
             print(f"[usersync] error: {e}", flush=True)
         time.sleep(INTERVAL)
 

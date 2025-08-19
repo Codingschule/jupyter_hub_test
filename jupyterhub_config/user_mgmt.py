@@ -4,7 +4,7 @@ def split_csv(env, default=""):
     return [x.strip() for x in os.environ.get(env, default).split(",") if x.strip()]
 
 
-# --- Roles y scopes ---
+# Define scopes for roles
 def scopes_for_role(role_name: str):
     r = (role_name or "").lower()
     if r == "admin":
@@ -15,12 +15,10 @@ def scopes_for_role(role_name: str):
 
 
 def configure_users_and_roles(c):
-    # Define los usuarios administradores y subadministradores
     admin_users = split_csv("JUPYTERHUB_ADMIN_USERS")
     subadmin_users = split_csv("JUPYTERHUB_SUBADMIN_USERS")
     allowed_users_env = split_csv("JUPYTERHUB_ALLOWED_USERS")
 
-    # Define el flag de bootstrap
     BOOTSTRAP_FLAG = os.environ.get(
         "JUPYTERHUB_SIGNUP_BOOTSTRAP_FLAG",
         "/srv/jupyterhub/.signup_bootstrap_done"
@@ -36,18 +34,14 @@ def configure_users_and_roles(c):
             print(f"[bootstrap] No pude crear flag {BOOTSTRAP_FLAG}: {e}")
 
     env_open = os.environ.get("JUPYTERHUB_OPEN_SIGNUP", "false").lower() == "true"
-    # env_auto = os.environ.get("JUPYTERHUB_AUTO_APPROVE", "false").lower() == "true"
 
     c.NativeAuthenticator.open_signup  = env_open or first_bootstrap
-    # c.NativeAuthenticator.auto_approve = env_auto or first_bootstrap
-
-
-    # Allowed users and roles
     c.Authenticator.admin_users = set(admin_users)
-    base_allowed = set(allowed_users_env) if allowed_users_env else set(admin_users + subadmin_users)
-    c.Authenticator.allowed_users = base_allowed | set(admin_users)
+    base_allowed = set(allowed_users_env) #  if allowed_users_env else set(admin_users + subadmin_users)
 
-    # Define los roles
+    if base_allowed:
+      c.Authenticator.allowed_users = base_allowed | set(admin_users)
+
     roles = []
     if subadmin_users:
         roles.append({
@@ -56,9 +50,9 @@ def configure_users_and_roles(c):
             "scopes": scopes_for_role("user-admin"),
             "users": subadmin_users,
         })
-    c.JupyterHub.load_roles = roles
 
-    # Grupos de conveniencia (formato NUEVO requerido)
+    c.JupyterHub.load_roles = roles
+    
     c.JupyterHub.load_groups = {
         "admins": {"users": admin_users},
         "subadmins": {"users": subadmin_users},

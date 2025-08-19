@@ -1,14 +1,15 @@
 
 services:
-  # --- construye la imagen single-user y sale (exit 0) ---
+  
+  # --- build image single-user and exit ---
   singleuser-image:
     image: my-datascience-singleuser:5.1.0
     build:
       context: .
       dockerfile: Dockerfile.singleuser
-    command: ["/bin/true"]      # contenedor efímero; termina inmediatamente
+    command: ["/bin/true"]
     restart: "no"
-    pull_policy: build   # evita el warning de "pull access denied"
+    pull_policy: build   # avoid warning of "pull access denied"
 
   jupyterhub:
     build:

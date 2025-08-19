@@ -1,7 +1,6 @@
 FROM jupyter/datascience-notebook:latest
 
-# Install jupyterhub (need to start-singleuser.sh) y packets util
-# conda/manba 
+# Install jupyterhub (need to start-singleuser.sh) and packets conda/manba ...
 USER root
 RUN mamba install -y -n base -c conda-forge \
       jupyterhub=5.1.0 \
@@ -12,5 +11,5 @@ RUN mamba install -y -n base -c conda-forge \
   && fix-permissions "/home/${NB_USER}" \
   && rm -rf /tmp/*
 
-# Volver a usuario normal
+# come back to user 
 USER ${NB_USER}
