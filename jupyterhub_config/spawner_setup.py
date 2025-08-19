@@ -11,7 +11,9 @@ def apply_spawner(c):
     c.DockerSpawner.remove = False
     c.DockerSpawner.name_template = 'jupyter-{username}'
     c.Spawner.args = ["--ServerApp.root_dir=/home/jovyan/work"]
-    c.DockerSpawner.volumes = {'jupyterhub-user-{username}': '/home/jovyan/work'}
+    c.Spawner.notebook_dir = "/home/jovyan/work"
+
+    c.DockerSpawner.volumes = {'JHub-{username}': '/home/jovyan/work'}
     c.DockerSpawner.extra_host_config = {"shm_size": "1g"}        
     c.DockerSpawner.environment = {
         'CHOWN_HOME': 'yes',
