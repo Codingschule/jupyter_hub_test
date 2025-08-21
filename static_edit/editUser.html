@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Edit users.json</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Bootstrap 5 (CDN) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons (opcional) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <div class="d-flex align-items-center mb-3">
+      <i class="bi bi-people-gear fs-3 me-2 text-primary"></i>
+      <h1 class="h3 m-0">Edit users.json</h1>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label">Load File JSON</label>
+            <input id="fileInput" type="file" accept="application/json,.json" class="form-control" />
+          </div>
+          <div class="col-md-8 d-flex flex-wrap gap-2">
+            <button id="btnAddGroup" class="btn btn-primary" disabled>
+              <i class="bi bi-plus-circle"></i> Add Group
+            </button>
+            <button id="btnDownload" class="btn btn-outline-secondary" disabled>
+              <i class="bi bi-download"></i> Download users.json
+            </button>
+            <button id="btnOverwrite" class="btn btn-warning" disabled>
+              <i class="bi bi-arrow-repeat"></i> Override File
+            </button>
+            <button id="btnClear" class="btn btn-outline-danger" disabled>
+              <i class="bi bi-trash"></i> Restart
+            </button>
+          </div>
+        </div>
+        <div id="errorPane" class="mt-2 text-danger fw-semibold"></div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <!-- Groups -->
+      <div class="col-lg-7">
+        <div class="card">
+          <div class="card-header">
+            <i class="bi bi-collection"></i> Group
+          </div>
+          <div class="card-body" id="groupsView">Load File to see Groups</div>
+        </div>
+      </div>
+
+      <!-- Users -->
+      <div class="col-lg-5">
+        <div class="card">
+          <div class="card-header">
+            <i class="bi bi-person-vcard"></i> Users
+          </div>
+          <div class="card-body">
+            <div class="input-group mb-2">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input id="userSearch" type="text" class="form-control" placeholder="Search email (partial or full)" />
+              <button id="btnSearch" class="btn btn-outline-primary">Search</button>
+            </div>
+            <div id="usersView">Load file to see Users</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Group -->
+  <div class="modal fade" id="addGroupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add new Group</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Name of Group</label>
+            <input id="addGroupName" type="text" class="form-control" placeholder="e.g., DataScience2025" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Emails to add (one per line or separated by commas)</label>
+            <textarea id="addGroupEmails" rows="6" class="form-control" placeholder="max@example.com, ana@example.org"></textarea>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="addOptAllowed" checked>
+            <label class="form-check-label" for="addOptAllowed">
+              Add to <code>allowed</code> as well
+            </label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="addOptCreateUsers" checked>
+            <label class="form-check-label" for="addOptCreateUsers">
+              Create in <code>users</code> if not exist
+            </label>
+          </div>
+          <div id="addGroupMsg" class="small text-muted"></div>
+        </div>
+        <div class="modal-footer">
+          <button id="btnAddCancel" type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="btnAddSave" type="button" class="btn btn-primary">
+            <i class="bi bi-save"></i> Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Rename Group -->
+  <div class="modal fade" id="renameGroupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-pencil-square"></i> Rename group</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="renameGroupCurrent" class="mb-2"></p>
+          <div class="mb-3">
+            <label class="form-label">New name</label>
+            <input id="renameGroupNewName" type="text" class="form-control" />
+          </div>
+          <div id="renameMsg" class="small text-muted"></div>
+        </div>
+        <div class="modal-footer">
+          <button id="btnRenameCancel" type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="btnRenameSave" type="button" class="btn btn-primary">
+            <i class="bi bi-save"></i> Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit members -->
+  <div class="modal fade" id="editMembersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-person-gear"></i> Edit members of group</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="editMembersGroupName" class="mb-2"></p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Current members</label>
+            <div id="editMembersCurrent" class="small"></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Emails to ADD (one per line or separated by commas)</label>
+            <textarea id="editAddEmails" rows="4" class="form-control" placeholder="nuevo1@example.com, nuevo2@example.org"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Emails to DELETE (one per line or separated by commas)</label>
+            <textarea id="editRemoveEmails" rows="4" class="form-control" placeholder="borrar1@example.com, borrar2@example.org"></textarea>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="editOptAllowed" checked>
+            <label class="form-check-label" for="editOptAllowed">
+              Also add new ones to <code>allowed</code>
+            </label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="editOptCreateUsers" checked>
+            <label class="form-check-label" for="editOptCreateUsers">
+              Create in <code>users</code> if none exist
+            </label>
+          </div>
+          <div id="editMsg" class="small text-muted"></div>
+        </div>
+        <div class="modal-footer">
+          <button id="btnEditCancel" type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button id="btnEditSave" type="button" class="btn btn-primary">
+            <i class="bi bi-check2-circle"></i> Save change
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // ----------------- State -----------------
+    let data = null; // { users:[], groups:{}, admins:[], allowed:[] }
+    let loadedFileName = "users.json";
+
+    // Bootstrap modals
+    const modals = {};
+    function getModal(id){
+      if(!modals[id]){
+        modals[id] = new bootstrap.Modal(document.getElementById(id));
+      }
+      return modals[id];
+    }
+
+    // ----------------- Util -----------------
+    const el = id => document.getElementById(id);
+    function showError(msg){ el('errorPane').textContent = msg || ''; }
+    function normalizeEmail(s){ return String(s||'').trim().toLowerCase(); }
+
+    function tryParseJSON(text){
+      let t = String(text || '');
+      if(t && t.charCodeAt(0) === 0xFEFF) t = t.slice(1); // BOM
+      try { return JSON.parse(t); } catch(_) {}
+      t = t.replace(/\/\*[\s\S]*?\*\//g, '');     // /* ... */
+      t = t.replace(/(^|[^:])\/\/.*$/gm, '$1');   // // ...
+      t = t.replace(/,\s*(\}|\])/g, '$1');        // trailing comma
+      return JSON.parse(t);
+    }
+
+    function toGroupsObject(g){
+      if(Array.isArray(g)){
+        const obj = {};
+        for(const item of g){
+          if(item && typeof item === 'object' && !Array.isArray(item)){
+            if('name' in item && Array.isArray(item.members)){
+              obj[String(item.name)] = item.members;
+            } else {
+              for(const [k,v] of Object.entries(item)){
+                if(Array.isArray(v)) obj[String(k)] = v;
+              }
+            }
+          }
+        }
+        return obj;
+      } else if(g && typeof g === 'object' && !Array.isArray(g)){
+        return g;
+      }
+      return {};
+    }
+
+    function normalize(){
+      // users
+      data.users = Array.isArray(data.users) ? data.users : [];
+      data.users = data.users
+        .filter(u => u && typeof u.name === 'string')
+        .map(u => ({
+          name: String(u.name),
+          admin: !!u.admin,
+          groups: Array.isArray(u.groups) ? Array.from(new Set(u.groups.map(String))) : []
+        }));
+
+      // groups
+      data.groups = toGroupsObject(data.groups);
+      for(const k of Object.keys(data.groups)){
+        const arr = Array.isArray(data.groups[k]) ? data.groups[k].map(String) : [];
+        data.groups[k] = Array.from(new Set(arr.map(normalizeEmail))).sort();
+      }
+
+      // allowed / admins
+      data.allowed = Array.from(new Set((Array.isArray(data.allowed)? data.allowed : []).map(normalizeEmail))).sort();
+      data.admins  = Array.from(new Set((Array.isArray(data.admins)?  data.admins  : []).map(normalizeEmail))).sort();
+
+      // Consistency: every group member must exist as a user
+      const userBy = new Map(data.users.map(u => [normalizeEmail(u.name), u]));
+      for(const [gname, members] of Object.entries(data.groups)){
+        for(const m of members){
+          const key = normalizeEmail(m);
+          let u = userBy.get(key);
+          if(!u){
+            u = { name: key, admin: false, groups: [gname] };
+            data.users.push(u);
+            userBy.set(key, u);
+          } else {
+            const set = new Set(u.groups || []);
+            if(!set.has(gname)) (u.groups ||= []).push(gname);
+          }
+        }
+      }
+
+      // Order users for readability
+      data.users.sort((a,b)=>a.name.localeCompare(b.name));
+    }
+
+    function render(){
+      renderGroups();
+      renderUsers();
+      el('btnAddGroup').disabled = false;
+      el('btnDownload').disabled = false;
+      el('btnClear').disabled = false;
+      el('btnOverwrite').disabled = false;
+    }
+
+    function renderGroups(){
+      const container = el('groupsView');
+      const gnames = Object.keys(data.groups).sort();
+      if(!gnames.length){ container.textContent = 'No groups.'; return; }
+
+      const table = document.createElement('table');
+      table.className = 'table table-sm table-hover align-middle';
+      const thead = document.createElement('thead');
+      thead.innerHTML = `
+        <tr>
+          <th>Group</th>
+          <th>Users</th>
+          <th class="text-center">#</th>
+          <th>Actions</th>
+        </tr>`;
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      for(const g of gnames){
+        const tr = document.createElement('tr');
+        const members = (data.groups[g]||[]).slice().sort();
+
+        const tdName = document.createElement('td'); tdName.textContent = g;
+
+        const tdUsers = document.createElement('td');
+        tdUsers.textContent = members.slice(0,10).join(', ') + (members.length>10?' …':'');
+
+        const tdCount = document.createElement('td');
+        tdCount.className = 'text-center';
+        tdCount.textContent = String(members.length);
+
+        const tdAct = document.createElement('td');
+        const btnRename = document.createElement('button');
+        btnRename.className = 'btn btn-outline-secondary btn-sm me-1';
+        btnRename.innerHTML = '<i class="bi bi-pencil-square"></i> Rename';
+        btnRename.addEventListener('click', ()=> openRenameGroup(g));
+
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'btn btn-outline-primary btn-sm';
+        btnEdit.innerHTML = '<i class="bi bi-people"></i> Edit members';
+        btnEdit.addEventListener('click', ()=> openEditMembers(g));
+
+        tdAct.appendChild(btnRename);
+        tdAct.appendChild(btnEdit);
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdUsers);
+        tr.appendChild(tdCount);
+        tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+
+      container.innerHTML = '';
+      container.appendChild(table);
+    }
+
+    function renderUsers(){
+      const container = el('usersView');
+      const q = el('userSearch').value.trim().toLowerCase();
+      let list = data.users;
+      if(q){
+        list = data.users.filter(u => String(u.name).toLowerCase().includes(q));
+      }
+      const sample = list.slice(0, q ? 50 : 12);
+      if(!sample.length){ container.textContent = 'No users to display.'; return; }
+
+      const table = document.createElement('table');
+      table.className = 'table table-sm table-striped align-middle';
+      const thead = document.createElement('thead');
+      thead.innerHTML = `
+        <tr>
+          <th>E-mail</th>
+          <th>admin</th>
+          <th>Groups</th>
+        </tr>`;
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      for(const u of sample){
+        const tr = document.createElement('tr');
+        const tdMail = document.createElement('td'); tdMail.textContent = u.name;
+        const tdAdm  = document.createElement('td'); tdAdm.textContent = u.admin ? 'yes' : 'no';
+        const tdGrp  = document.createElement('td'); tdGrp.textContent = (u.groups||[]).join(', ');
+        tr.appendChild(tdMail); tr.appendChild(tdAdm); tr.appendChild(tdGrp);
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+
+      container.innerHTML = '';
+      container.appendChild(table);
+    }
+
+    // ---------- Open/Close modals ----------
+    function openAddGroup(){
+      el('addGroupName').value = '';
+      el('addGroupEmails').value = '';
+      el('addOptAllowed').checked = true;
+      el('addOptCreateUsers').checked = true;
+      el('addGroupMsg').textContent = '';
+      getModal('addGroupModal').show();
+    }
+
+    function openRenameGroup(groupName){
+      el('renameGroupCurrent').textContent = 'Current group: ' + groupName;
+      el('renameGroupNewName').value = '';
+      el('renameMsg').textContent = '';
+      el('renameGroupModal').dataset.group = groupName;
+      getModal('renameGroupModal').show();
+    }
+
+    function openEditMembers(groupName){
+      el('editMembersGroupName').textContent = 'Group: ' + groupName;
+      const members = (data.groups[groupName]||[]).slice().sort();
+      el('editMembersCurrent').textContent = members.join(', ') || '(empty)';
+      el('editAddEmails').value = '';
+      el('editRemoveEmails').value = '';
+      el('editOptAllowed').checked = true;
+      el('editOptCreateUsers').checked = true;
+      el('editMsg').textContent = '';
+      el('editMembersModal').dataset.group = groupName;
+      getModal('editMembersModal').show();
+    }
+
+    // ---------- Core helpers ----------
+    function ensureGroup(name){ if(!data.groups[name]) data.groups[name] = []; }
+
+    function addEmailsToGroup(groupName, emails, { addToAllowed=true, createUsers=true } = {}){
+      ensureGroup(groupName);
+      const groupSet   = new Set(data.groups[groupName].map(normalizeEmail));
+      const userByName = new Map(data.users.map(u => [normalizeEmail(u.name), u]));
+      const allowedSet = new Set(data.allowed.map(normalizeEmail));
+
+      let addedToGroup = 0, createdUsers = 0;
+      for(const raw of emails){
+        const email = normalizeEmail(raw);
+        if(!email) continue;
+
+        if(!groupSet.has(email)){
+          data.groups[groupName].push(email);
+          groupSet.add(email);
+          addedToGroup++;
+        }
+
+        let u = userByName.get(email);
+        if(!u && createUsers){
+          u = { name: email, admin: false, groups: [groupName] };
+          data.users.push(u);
+          userByName.set(email, u);
+          createdUsers++;
+        } else if(u){
+          const gset = new Set((u.groups||[]).map(String));
+          if(!gset.has(groupName)) (u.groups ||= []).push(groupName);
+        }
+
+        if(addToAllowed && !allowedSet.has(email)){
+          data.allowed.push(email);
+          allowedSet.add(email);
+        }
+      }
+      data.groups[groupName].sort();
+      data.users.sort((a,b)=>a.name.localeCompare(b.name));
+      data.allowed.sort();
+      return { addedToGroup, createdUsers };
+    }
+
+    function cleanupOrphanUser(email, { alsoAllowed = true, alsoAdmins = true } = {}){
+      const key = normalizeEmail(email);
+      const idx = data.users.findIndex(u => normalizeEmail(u.name) === key);
+      if(idx !== -1){
+        const u = data.users[idx];
+        if(!Array.isArray(u.groups) || u.groups.length === 0){
+          data.users.splice(idx, 1);
+        }
+      }
+      if(alsoAllowed && Array.isArray(data.allowed)){
+        data.allowed = data.allowed.filter(x => normalizeEmail(x) !== key);
+      }
+      if(alsoAdmins && Array.isArray(data.admins)){
+        data.admins = data.admins.filter(x => normalizeEmail(x) !== key);
+      }
+    }
+
+    function removeEmailsFromGroup(groupName, emails){
+      const target = data.groups[groupName] || [];
+      const removeSet = new Set(emails.map(normalizeEmail));
+
+      data.groups[groupName] = target.filter(e => !removeSet.has(normalizeEmail(e)));
+
+      const nameToUser = new Map(data.users.map(u => [normalizeEmail(u.name), u]));
+      for(const em of removeSet){
+        const u = nameToUser.get(em);
+        if(u && Array.isArray(u.groups)){
+          u.groups = u.groups.filter(g => g !== groupName);
+        }
+        cleanupOrphanUser(em, { alsoAllowed: true, alsoAdmins: true });
+      }
+      data.groups[groupName].sort();
+    }
+
+    function renameGroup(oldName, newName){
+      const newN = String(newName || '').trim();
+      if(!newN || newN === oldName) return false;
+      if(data.groups[newN]) return false; // exists
+
+      const members = data.groups[oldName] || [];
+      delete data.groups[oldName];
+      data.groups[newN] = members.slice();
+
+      for(const u of data.users){
+        if(Array.isArray(u.groups)){
+          u.groups = u.groups.map(g => g === oldName ? newN : g);
+        }
+      }
+      return true;
+    }
+
+    function downloadJSON(filename){
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'users.json';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+    }
+
+    function overwriteJSON(){
+      downloadJSON(loadedFileName);
+    }
+
+    function resetUI(){
+      data = null;
+      el('groupsView').textContent = 'Load File to see Groups';
+      el('usersView').textContent = 'Load file to see Users';
+      el('btnAddGroup').disabled = true;
+      el('btnDownload').disabled = true;
+      el('btnClear').disabled = true;
+      el('btnOverwrite').disabled = true;
+      el('fileInput').value = '';
+      showError('');
+    }
+
+    function loadFromJSON(text){
+      const obj = tryParseJSON(text);
+      data = {
+        users:  Array.isArray(obj.users)  ? obj.users  : [],
+        groups: obj.groups ?? {},
+        admins: Array.isArray(obj.admins) ? obj.admins : [],
+        allowed:Array.isArray(obj.allowed)? obj.allowed: []
+      };
+      normalize();
+      render();
+      showError('');
+    }
+
+    // ----------------- Events -----------------
+    el('fileInput').addEventListener('change', e => {
+      const f = e.target.files && e.target.files[0];
+      if(!f) return;
+      loadedFileName = f.name || "users.json";
+      const reader = new FileReader();
+      reader.onload = () => {
+        try { loadFromJSON(String(reader.result||'')); }
+        catch (err) { console.error(err); showError('Invalid JSON file: ' + (err && err.message ? err.message : err)); }
+      };
+      reader.readAsText(f);
+    });
+
+    el('btnAddGroup').addEventListener('click', openAddGroup);
+    el('btnDownload').addEventListener('click', () => downloadJSON('users.json'));
+    el('btnOverwrite').addEventListener('click', overwriteJSON);
+    el('btnClear').addEventListener('click', resetUI);
+    el('btnSearch').addEventListener('click', renderUsers);
+
+    // Modal: Add Group
+    el('btnAddCancel').addEventListener('click', () => { getModal('addGroupModal').hide(); });
+    el('btnAddSave').addEventListener('click', () => {
+      const name = el('addGroupName').value.trim();
+      const raw  = el('addGroupEmails').value;
+      const emails = raw.split(/\n|,|;|\s+/).map(s=>s.trim()).filter(Boolean);
+      if(!name){ el('addGroupMsg').textContent = 'Enter group name.'; return; }
+      if(!emails.length){ el('addGroupMsg').textContent = 'Add at least one email.'; return; }
+      const res = addEmailsToGroup(name, emails, {
+        addToAllowed: el('addOptAllowed').checked,
+        createUsers:  el('addOptCreateUsers').checked
+      });
+      el('addGroupMsg').textContent = `Added to group: ${res.addedToGroup}. New users created: ${res.createdUsers}.`;
+      render();
+      setTimeout(()=> getModal('addGroupModal').hide(), 400);
+    });
+
+    // Modal: Rename Group
+    el('btnRenameCancel').addEventListener('click', () => { getModal('renameGroupModal').hide(); });
+    el('btnRenameSave').addEventListener('click', () => {
+      const oldName = el('renameGroupModal').dataset.group;
+      const newName = el('renameGroupNewName').value.trim();
+      if(!newName){ el('renameMsg').textContent = 'Enter new name.'; return; }
+      if(data.groups[newName]){ el('renameMsg').textContent = 'A group with that name already exists.'; return; }
+      const ok = renameGroup(oldName, newName);
+      if(!ok){ el('renameMsg').textContent = 'Could not rename (same name?).'; return; }
+      render();
+      setTimeout(()=> getModal('renameGroupModal').hide(), 300);
+    });
+
+    // Modal: Edit Members
+    el('btnEditCancel').addEventListener('click', () => { getModal('editMembersModal').hide(); });
+    el('btnEditSave').addEventListener('click', () => {
+      const gname = el('editMembersModal').dataset.group;
+      const addRaw = el('editAddEmails').value;
+      const rmRaw  = el('editRemoveEmails').value;
+      const addList = addRaw.split(/\n|,|;|\s+/).map(s=>s.trim()).filter(Boolean);
+      const rmList  = rmRaw.split(/\n|,|;|\s+/).map(s=>s.trim()).filter(Boolean);
+
+      if(addList.length){
+        addEmailsToGroup(gname, addList, {
+          addToAllowed: el('editOptAllowed').checked,
+          createUsers:  el('editOptCreateUsers').checked
+        });
+      }
+      if(rmList.length){
+        removeEmailsFromGroup(gname, rmList);
+      }
+      render();
+      el('editMsg').textContent = 'Changes applied.';
+      setTimeout(()=> getModal('editMembersModal').hide(), 400);
+    });
+  </script>
+</body>
+</html>

@@ -29,9 +29,9 @@ def configure_users_and_roles(c):
         try:
             with open(BOOTSTRAP_FLAG, "w", encoding="utf-8") as f:
                 f.write("signup opened on first boot\n")
-            print(f"[bootstrap] Signup ABIERTO solo esta ejecución. Flag creados: {BOOTSTRAP_FLAG}")
+            print(f"[bootstrap] Signup OPEN only this execution. Flags created: {BOOTSTRAP_FLAG}")
         except Exception as e:
-            print(f"[bootstrap] No pude crear flag {BOOTSTRAP_FLAG}: {e}")
+            print(f"[bootstrap] can't create flag {BOOTSTRAP_FLAG}: {e}")
 
     env_open = os.environ.get("JUPYTERHUB_OPEN_SIGNUP", "false").lower() == "true"
 

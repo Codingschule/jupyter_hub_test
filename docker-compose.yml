@@ -35,17 +35,22 @@ services:
       - JUPYTERHUB_ADMIN_USERS=${JUPYTERHUB_ADMIN_USERS}
       - JUPYTERHUB_SUBADMIN_USERS=${JUPYTERHUB_SUBADMIN_USERS}
       - PYTHONPATH=/srv/jupyterhub
+      - EDIT_LOGIN_PASSWORD=${EDIT_LOGIN_PASSWORD}
+      - EDIT_TARGET_URL=${EDIT_TARGET_URL}
+#      - JUPYTERHUB_BASE_URL=${JUPYTERHUB_BASE_URL:-/}
     volumes:
       - ./jupyterhub_config:/srv/jupyterhub
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./jupyterhub_config/jupyterhub_cookie_secret:/srv/jupyterhub/jupyterhub_cookie_secret
-      - ./jupyterhub_config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
-      - ./jupyterhub_config/users.json:/srv/jupyterhub/users.json:ro
+      #- ./jupyterhub_config/jupyterhub_cookie_secret:/srv/jupyterhub/jupyterhub_cookie_secret
+      - jhub-secret:/srv/jupyterhub/secret
+      #- ./jupyterhub_config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
+      #- ./jupyterhub_config/users.json:/srv/jupyterhub/users.json:ro
+      - ./static_edit:/usr/local/share/jupyterhub/static/edit:rw
     networks:
       - hub-public
       - hub-backend
     healthcheck:
-      test: ["CMD-SHELL", "python3 -c 'import urllib.request,sys; sys.exit(0 if urllib.request.urlopen(\"http://localhost:8000/hub/health\").getcode()==200 else 1)'"]
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/hub/health').getcode()==200 else 1)\""]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -54,6 +59,10 @@ services:
         condition: service_completed_successfully  # wait to build singleuser image
       postgres:
           condition: service_healthy
+    command: >
+      bash -lc "/usr/local/bin/gen-edit-config.sh
+      && jupyterhub -f /srv/jupyterhub/jupyterhub_config.py"
+
   postgres:
     image: postgres:13
     container_name: jupyterhub-postgres
@@ -84,3 +93,4 @@ networks:
     internal: true
 volumes:
   postgres-data:
+  jhub-secret:

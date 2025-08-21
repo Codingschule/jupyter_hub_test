@@ -1,0 +1,87 @@
+{
+  "users": [
+    {
+      "name": "elena.kruger@gmx.de",
+      "admin": false,
+      "groups": [
+        "OktoberJulia2025"
+      ]
+    },
+    {
+      "name": "jorge.perez@yahoo.com",
+      "admin": false,
+      "groups": [
+        "WinterScience2025"
+      ]
+    },
+    {
+      "name": "mariajuana@gmail.com",
+      "admin": false,
+      "groups": [
+        "OktoberPython"
+      ]
+    },
+    {
+      "name": "marialadelbarrio@mexico.com",
+      "admin": false,
+      "groups": [
+        "WinterScience2025"
+      ]
+    },
+    {
+      "name": "mia.khan@outlook.com",
+      "admin": false,
+      "groups": [
+        "WinterScience2025"
+      ]
+    },
+    {
+      "name": "pablo.santos@web.de",
+      "admin": false,
+      "groups": [
+        "OktoberJulia2025"
+      ]
+    },
+    {
+      "name": "sofia@sofia.com",
+      "admin": false,
+      "groups": [
+        "OktoberPython"
+      ]
+    },
+    {
+      "name": "tom.wagner@hotmail.com",
+      "admin": false,
+      "groups": [
+        "OktoberJulia2025"
+      ]
+    }
+  ],
+  "groups": {
+    "OktoberPython": [
+      "mariajuana@gmail.com",
+      "sofia@sofia.com"
+    ],
+    "OktoberJulia2025": [
+      "elena.kruger@gmx.de",
+      "pablo.santos@web.de",
+      "tom.wagner@hotmail.com"
+    ],
+    "WinterScience2025": [
+      "jorge.perez@yahoo.com",
+      "marialadelbarrio@mexico.com",
+      "mia.khan@outlook.com"
+    ]
+  },
+  "admins": [],
+  "allowed": [
+    "elena.kruger@gmx.de",
+    "jorge.perez@yahoo.com",
+    "mariajuana@gmail.com",
+    "marialadelbarrio@mexico.com",
+    "mia.khan@outlook.com",
+    "pablo.santos@web.de",
+    "sofia@sofia.com",
+    "tom.wagner@hotmail.com"
+  ]
+}
