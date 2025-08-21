@@ -1,5 +1,4 @@
 .env
-jupyterhub_config/jupyterhub_cookie_secret
 jupyterhub_config/jupyterhub-proxy.pid
 jupyterhub_config/users.json
 jupyterhub_config/.signup_bootstrap_done

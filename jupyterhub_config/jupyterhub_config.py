@@ -8,7 +8,6 @@ from spawner_setup import apply_spawner
 
 c = get_config()  # type: ignore
 
-
 users_file = os.getenv("USERS_FILE", "/srv/jupyterhub/users.json")
 sync_interval = int(os.getenv("USERSYNC_INTERVAL", "10"))
 prune = os.getenv("USERSYNC_PRUNE", "false")
@@ -28,7 +27,6 @@ c.JupyterHub.services = [
 
 apply_auth(c, users_file=users_file)
 
-
 # --- URLs Hub ---
 c.JupyterHub.bind_url = "http://:8000"
 c.JupyterHub.hub_bind_url = "http://0.0.0.0:8081"
@@ -44,11 +42,10 @@ c.JupyterHub.db_url = f'postgresql+psycopg://{db_user}:{db_pass}@{db_host}:{db_p
 # --- Spawner configuration ---
 apply_spawner(c)
 
-
 c.JupyterHub.log_level = "INFO"
 c.JupyterHub.tornado_settings = {"slow_spawn_timeout": 60} 
 
-
+c.JupyterHub.cookie_secret_file = "/srv/jupyterhub/secret/jupyterhub_cookie_secret"
 
 
 

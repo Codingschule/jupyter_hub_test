@@ -38,9 +38,10 @@ services:
     volumes:
       - ./jupyterhub_config:/srv/jupyterhub
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./jupyterhub_config/jupyterhub_cookie_secret:/srv/jupyterhub/jupyterhub_cookie_secret
-      - ./jupyterhub_config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
-      - ./jupyterhub_config/users.json:/srv/jupyterhub/users.json:ro
+    #  - ./jupyterhub_config/jupyterhub_cookie_secret:/srv/jupyterhub/jupyterhub_cookie_secret
+      - jhub-secret:/srv/jupyterhub/secret
+    #  - ./jupyterhub_config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py:ro
+    #  - ./jupyterhub_config/users.json:/srv/jupyterhub/users.json:ro
     networks:
       - hub-public
       - hub-backend
@@ -84,3 +85,4 @@ networks:
     internal: true
 volumes:
   postgres-data:
+  jhub-secret:
