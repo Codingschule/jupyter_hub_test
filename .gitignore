@@ -2,3 +2,5 @@
 jupyterhub_config/jupyterhub-proxy.pid
 jupyterhub_config/users.json
 jupyterhub_config/.signup_bootstrap_done
+jupyterhub_config/static_edit/config.js
+
