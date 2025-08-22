@@ -14,6 +14,8 @@ def apply_spawner(c):
     c.Spawner.notebook_dir = "/home/jovyan/work"
 
     c.DockerSpawner.volumes = {'JHub-{username}': '/home/jovyan/work'}
+    # for the users security: ensures isolated user volumes, no shared home dirs
+    
     c.DockerSpawner.extra_host_config = {"shm_size": "1g"}        
     c.DockerSpawner.environment = {
         'CHOWN_HOME': 'yes',

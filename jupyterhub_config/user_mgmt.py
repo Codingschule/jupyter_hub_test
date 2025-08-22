@@ -29,13 +29,14 @@ def configure_users_and_roles(c):
         try:
             with open(BOOTSTRAP_FLAG, "w", encoding="utf-8") as f:
                 f.write("signup opened on first boot\n")
-            print(f"[bootstrap] Signup ABIERTO solo esta ejecución. Flag creados: {BOOTSTRAP_FLAG}")
+            print(f"[bootstrap] Signup OPEN only this execution. Flags created: {BOOTSTRAP_FLAG}")
         except Exception as e:
-            print(f"[bootstrap] No pude crear flag {BOOTSTRAP_FLAG}: {e}")
+            print(f"[bootstrap] can't create flag {BOOTSTRAP_FLAG}: {e}")
 
     env_open = os.environ.get("JUPYTERHUB_OPEN_SIGNUP", "false").lower() == "true"
 
     c.NativeAuthenticator.open_signup  = env_open or first_bootstrap
+    # for the users security: only allow signup on first boot unless explicitly enabled
     c.Authenticator.admin_users = set(admin_users)
     base_allowed = set(allowed_users_env) #  if allowed_users_env else set(admin_users + subadmin_users)
 
@@ -46,7 +47,7 @@ def configure_users_and_roles(c):
     if subadmin_users:
         roles.append({
             "name": "user-admin",
-            "description": "Rol limit to management users and groups",
+            "description": "Role limit to management users and groups",
             "scopes": scopes_for_role("user-admin"),
             "users": subadmin_users,
         })
