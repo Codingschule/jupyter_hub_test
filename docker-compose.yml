@@ -1,45 +1,91 @@
 
 services:
+  
+  # --- build image single-user and exit ---
+  singleuser-image:
+    image: my-datascience-singleuser:5.1.0
+    build:
+      context: .
+      dockerfile: Dockerfile.singleuser
+    command: ["/bin/true"]
+    restart: "no"
+    pull_policy: build   # avoid warning of "pull access denied"
+
   jupyterhub:
-    build: .
-    container_name: jupyterhub
-    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile  #dockerfile for JupyterHub
+      args:
+        JUPYTERHUB_VERSION: "${JUPYTERHUB_VERSION:-5.1.0}"
+    restart: unless-stopped
     ports:
-      - "${JUPYTERHUB_PORT}:8000"
+      - "${JUPYTERHUB_PORT:-8111}:8000"
     env_file:
       - .env
     environment:
       - DOCKER_JUPYTER_IMAGE=${DOCKER_JUPYTER_IMAGE}
-      - JUPYTERHUB_ADMIN_USERS=${JUPYTERHUB_ADMIN_USERS}
       - JUPYTERHUB_NETWORK=${JUPYTERHUB_NETWORK}
-      - DB_NAME=${DB_NAME}
+      - POSTGRES_DB=${POSTGRES_DB}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - JUPYTERHUB_OPEN_SIGNUP=${JUPYTERHUB_OPEN_SIGNUP}
+      - JUPYTERHUB_AUTO_APPROVE=${JUPYTERHUB_AUTO_APPROVE}
+      - JUPYTERHUB_ADMIN_USERS=${JUPYTERHUB_ADMIN_USERS}
+      - JUPYTERHUB_SUBADMIN_USERS=${JUPYTERHUB_SUBADMIN_USERS}
+      - PYTHONPATH=/srv/jupyterhub
+      - EDIT_LOGIN_PASSWORD=${EDIT_LOGIN_PASSWORD}
+      - EDIT_TARGET_URL=${EDIT_TARGET_URL}      
     volumes:
-      - ./jupyterhub_config/jupyterhub_config.py:/srv/jupyterhub/jupyterhub_config.py
+      - ./jupyterhub_config:/srv/jupyterhub
       - /var/run/docker.sock:/var/run/docker.sock
+      - jhub-secret:/srv/jupyterhub/secret
+      - ./static_edit:/usr/local/share/jupyterhub/static/edit:rw    
     networks:
-      - ${JUPYTERHUB_NETWORK}
+      - hub-public
+      - hub-backend
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/hub/health').getcode()==200 else 1)\""]      
+      interval: 30s
+      timeout: 5s
+      retries: 5
     depends_on:
-      - postgres
+      singleuser-image:
+        condition: service_completed_successfully  # wait to build singleuser image
+      postgres:
+          condition: service_healthy
+    command: >
+      bash -lc "/usr/local/bin/gen-edit-config.sh
+      && jupyterhub -f /srv/jupyterhub/jupyterhub_config.py"    
   postgres:
     image: postgres:13
-    restart: always
+    container_name: jupyterhub-postgres
+    restart: unless-stopped
+    expose:
+      - "5432"
+    ports:
+      - "5433:5432"
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - ${JUPYTERHUB_NETWORK}
-
-volumes:
-  postgres-data:
+      - hub-backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -h localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 networks:
-  jupyterhub-network:
-    external: true
-
+  hub-public: 
+    name: hub-public
+  hub-backend:
+    name: hub-backend
+    internal: true
+volumes:
+  postgres-data:
+  jhub-secret:
