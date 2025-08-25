@@ -15,4 +15,5 @@ RUN python3 -m pip install --no-cache-dir --upgrade pip \
   && python3 -m pip check \
  && rm -rf /root/.cache/pip ~/.cache/pip /tmp/*
 
- 
+COPY jupyterhub_config/gen-edit-config.sh /usr/local/bin/gen-edit-config.sh
+RUN chmod +x /usr/local/bin/gen-edit-config.sh
