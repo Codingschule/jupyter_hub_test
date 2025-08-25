@@ -82,7 +82,7 @@ def ensure_user(name: str, admin: bool):
 
     post_body = {"admin": True} if admin else None
     code, _ = api("POST", path, post_body)
-    if code not in (201, 409):  # 201 creado, 409 ya existe
+    if code not in (201, 409):  # 201 created, 409 already exists
         raise RuntimeError(f"POST {path} -> {code}")
 
     code, data = api("GET", path, None)
@@ -96,13 +96,11 @@ def ensure_user(name: str, admin: bool):
         code2, _ = api("PATCH", path, {"admin": bool(admin)})
         if code2 not in (200, 204, 404):
             raise RuntimeError(f"PATCH {path} -> {code2}")
-        
-
 
 def ensure_group(name):
-    code, _ = api("POST", "/groups", {"name": name})
+    code, _ = api("POST", "/groups", {"groups": [name]})
     if code not in (201, 409):
-        raise RuntimeError(f"POST /groups {name} -> {code}")
+        raise RuntimeError(f"POST /groups {name} -> {code}")        
 
 def add_members(group, users):
     if not users:

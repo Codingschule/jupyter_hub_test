@@ -1,5 +1,5 @@
 # type: ignore
-import os, re
+import os
 
 from user_mgmt import configure_users_and_roles
 from hub_setup import get_db_env
@@ -27,25 +27,40 @@ c.JupyterHub.services = [
 
 apply_auth(c, users_file=users_file)
 
-# --- URLs Hub ---
+# ------------------------
+# URLs Hub
+# ------------------------
 c.JupyterHub.bind_url = "http://:8000"
 c.JupyterHub.hub_bind_url = "http://0.0.0.0:8081"
 c.JupyterHub.hub_connect_url = "http://jupyterhub:8081"
 
-# --- Config users & rols ---
+
+# ------------------------
+# Config users & roles
+# ------------------------
 configure_users_and_roles(c)
 
-# --- DB configuration ----
+
+# ------------------------
+# DB configuration
+# ------------------------
 db_name, db_host, db_port, db_user, db_pass = get_db_env()
 c.JupyterHub.db_url = f'postgresql+psycopg://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
 
-# --- Spawner configuration ---
+
+# ------------------------
+# Spawner configuration
+# ------------------------
 apply_spawner(c)
 
 c.JupyterHub.log_level = "INFO"
 c.JupyterHub.tornado_settings = {"slow_spawn_timeout": 60} 
 
 c.JupyterHub.cookie_secret_file = "/srv/jupyterhub/secret/jupyterhub_cookie_secret"
+# for the users security: keep secret outside git repo, never expose this file
 
+c.JupyterHub.tornado_settings = {
+    "slow_spawn_timeout": 60,
+}
 
 

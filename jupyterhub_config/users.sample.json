@@ -1,0 +1,31 @@
+{
+  "users": [
+    {
+      "name": "john.smith@gmail.com",
+      "admin": false,
+      "groups": [
+        "Course_1"
+      ]
+    },
+    {
+      "name": "emma.jones@yahoo.com",
+      "admin": false,
+      "groups": [
+        "Course_2"
+      ]
+    }
+  ],
+  "groups": {
+    "Course_1": [
+      "john.smith@gmail.com"
+    ],
+    "Course_2": [
+      "emma.jones@yahoo.com"
+    ]
+  },
+  "admins": [],
+  "allowed": [
+    "john.smith@gmail.com",
+    "emma.jones@yahoo.com"
+  ]
+}

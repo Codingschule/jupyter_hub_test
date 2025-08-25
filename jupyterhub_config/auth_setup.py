@@ -44,3 +44,4 @@ def apply_auth(
     c.NativeAuthenticator.admin_approval = False
     c.NativeAuthenticator.minimum_password_length = min_password_len
     c.Authenticator.username_pattern = username_pattern
+    # for the users security: regex prevents invalid/injected usernames
